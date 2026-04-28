@@ -1,0 +1,208 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Online Voting System</title>
+    <style>
+        body {
+            font-family: Arial;
+            background: linear-gradient(to right, #4facfe, #00f2fe);
+            text-align: center;
+            color: #333;
+        }
+
+        .container {
+            margin: 30px auto;
+            width: 400px;
+            background: white;
+            padding: 20px;
+            border-radius: 15px;
+            box-shadow: 0 0 15px rgba(0,0,0,0.2);
+        }
+
+        h1 {
+            margin-bottom: 10px;
+        }
+
+        .candidate {
+            display: flex;
+            align-items: center;
+            margin: 10px 0;
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 10px;
+            cursor: pointer;
+        }
+
+        .candidate img {
+            width: 50px;
+            height: 50px;
+            border-radius: 50%;
+            margin-right: 10px;
+        }
+
+        button {
+            padding: 10px 15px;
+            margin-top: 10px;
+            border: none;
+            border-radius: 8px;
+            background: #4facfe;
+            color: white;
+            cursor: pointer;
+        }
+
+        .results {
+            margin-top: 20px;
+            text-align: left;
+        }
+
+        .bar {
+            height: 20px;
+            background: #4facfe;
+            margin: 5px 0;
+            border-radius: 5px;
+        }
+
+        .hidden {
+            display: none;
+        }
+
+        .toast {
+            margin-top: 10px;
+            font-weight: bold;
+        }
+    </style>
+</head>
+
+<body>
+
+<div class="container">
+
+    <h1>🗳️ Voting System</h1>
+
+    <!-- LOGIN -->
+    <div id="loginSection">
+        <input type="text" id="username" placeholder="Enter your name">
+        <br>
+        <button onclick="login()">Login</button>
+    </div>
+
+    <!-- VOTING -->
+    <div id="voteSection" class="hidden">
+        <h3 id="welcome"></h3>
+
+        <form id="voteForm">
+
+            <label class="candidate">
+                <input type="radio" name="candidate" value="A">
+                <img src="https://via.placeholder.com/50">
+                Candidate A
+            </label>
+
+            <label class="candidate">
+                <input type="radio" name="candidate" value="B">
+                <img src="https://via.placeholder.com/50">
+                Candidate B
+            </label>
+
+            <label class="candidate">
+                <input type="radio" name="candidate" value="C">
+                <img src="https://via.placeholder.com/50">
+                Candidate C
+            </label>
+
+            <button type="submit">Vote</button>
+        </form>
+
+        <p class="toast" id="message"></p>
+
+        <div class="results">
+            <h3>Results</h3>
+
+            <div>A (<span id="countA">0</span>)</div>
+            <div class="bar" id="barA"></div>
+
+            <div>B (<span id="countB">0</span>)</div>
+            <div class="bar" id="barB"></div>
+
+            <div>C (<span id="countC">0</span>)</div>
+            <div class="bar" id="barC"></div>
+        </div>
+
+        <button onclick="resetVotes()">Reset (Admin)</button>
+    </div>
+
+</div>
+
+<script>
+let votes = JSON.parse(localStorage.getItem("votes")) || {A:0, B:0, C:0};
+let users = JSON.parse(localStorage.getItem("users")) || {};
+
+function login() {
+    let username = document.getElementById("username").value.trim();
+
+    if(username === "") {
+        alert("Enter your name!");
+        return;
+    }
+
+    localStorage.setItem("currentUser", username);
+    document.getElementById("loginSection").classList.add("hidden");
+    document.getElementById("voteSection").classList.remove("hidden");
+    document.getElementById("welcome").innerText = "Welcome " + username;
+
+    updateResults();
+
+    if(users[username]) {
+        document.getElementById("message").innerText = "You already voted!";
+        document.getElementById("voteForm").style.display = "none";
+    }
+}
+
+document.getElementById("voteForm").addEventListener("submit", function(e) {
+    e.preventDefault();
+
+    let user = localStorage.getItem("currentUser");
+    let selected = document.querySelector('input[name="candidate"]:checked');
+
+    if(!selected) {
+        document.getElementById("message").innerText = "Select a candidate!";
+        return;
+    }
+
+    if(users[user]) {
+        document.getElementById("message").innerText = "Already voted!";
+        return;
+    }
+
+    votes[selected.value]++;
+    users[user] = true;
+
+    localStorage.setItem("votes", JSON.stringify(votes));
+    localStorage.setItem("users", JSON.stringify(users));
+
+    document.getElementById("message").innerText = "Vote submitted!";
+    document.getElementById("voteForm").style.display = "none";
+
+    updateResults();
+});
+
+function updateResults() {
+    let total = votes.A + votes.B + votes.C;
+
+    document.getElementById("countA").innerText = votes.A;
+    document.getElementById("countB").innerText = votes.B;
+    document.getElementById("countC").innerText = votes.C;
+
+    document.getElementById("barA").style.width = total ? (votes.A/total*100)+"%" : "0%";
+    document.getElementById("barB").style.width = total ? (votes.B/total*100)+"%" : "0%";
+    document.getElementById("barC").style.width = total ? (votes.C/total*100)+"%" : "0%";
+}
+
+function resetVotes() {
+    localStorage.clear();
+    location.reload();
+}
+</script>
+
+</body>
+</html>
